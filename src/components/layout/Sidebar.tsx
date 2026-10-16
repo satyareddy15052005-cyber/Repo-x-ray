@@ -21,6 +21,7 @@ import {
   Copy,
   History,
   FileText,
+  X,
 } from 'lucide-react';
 import { BrandLogo } from '../common/BrandLogo';
 
@@ -52,8 +53,8 @@ export function Sidebar({ onOpenShortcuts, isOpenMobile, onCloseMobile }: Sideba
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 px-5 border-b border-slate-200 flex items-center justify-between shrink-0">
-        <NavLink to="/" className="flex items-center gap-2.5 group">
+      <div className="h-16 px-4 md:px-5 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <NavLink to="/" className="flex items-center gap-2.5 group" onClick={onCloseMobile}>
           <BrandLogo className="w-6 h-6 transition-transform group-hover:scale-105" />
           <div>
             <div className="font-bold text-sm tracking-tight text-slate-900 leading-tight">
@@ -64,6 +65,16 @@ export function Sidebar({ onOpenShortcuts, isOpenMobile, onCloseMobile }: Sideba
             </div>
           </div>
         </NavLink>
+
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-sm transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Sections */}

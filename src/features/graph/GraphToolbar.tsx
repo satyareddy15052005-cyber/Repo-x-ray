@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Maximize2,
+  Minimize2,
   RotateCw,
   Search,
   Filter,
@@ -54,6 +55,8 @@ interface GraphToolbarProps {
   onOpenShortestPath?: () => void;
   totalNodes: number;
   visibleNodes: number;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function GraphToolbar({
@@ -77,6 +80,8 @@ export function GraphToolbar({
   onOpenShortestPath,
   totalNodes,
   visibleNodes,
+  isFullscreen,
+  onToggleFullscreen,
 }: GraphToolbarProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
@@ -95,7 +100,7 @@ export function GraphToolbar({
   return (
     <div className="flex flex-col bg-white border-b border-slate-200 text-sm z-20 shrink-0">
       {/* Primary Toolbar Row */}
-      <div className="h-13 px-4 flex items-center justify-between gap-3">
+      <div className="h-12 sm:h-13 px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-3 overflow-x-auto select-none">
         {/* Left: Search & Filter toggle */}
         <div className="flex items-center gap-2 flex-1 max-w-lg">
           <div className="relative flex-1">
@@ -171,7 +176,7 @@ export function GraphToolbar({
           )}
 
           {/* Direction Controls */}
-          <div className="flex items-center border border-slate-200 rounded-sm p-0.5 bg-slate-50">
+          <div className="hidden md:flex items-center border border-slate-200 rounded-sm p-0.5 bg-slate-50">
             <button
               onClick={() => onDirectionChange('LR')}
               title="Layout Left-to-Right"
@@ -212,7 +217,7 @@ export function GraphToolbar({
 
           <button
             onClick={onToggleHighlightCycles}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-sm transition-colors ${
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-medium border rounded-sm transition-colors ${
               highlightCycles
                 ? 'bg-amber-50 border-amber-300 text-amber-800'
                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -225,17 +230,42 @@ export function GraphToolbar({
           <button
             onClick={onFitView}
             title="Fit graph to viewport"
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-200 text-slate-700 rounded-sm hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-200 text-slate-700 rounded-sm hover:bg-slate-50 transition-colors"
           >
             <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">Fit</span>
           </button>
 
+          {/* Fullscreen View Toggle */}
+          {onToggleFullscreen && (
+            <button
+              onClick={onToggleFullscreen}
+              title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Fullscreen View"}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-sm transition-colors cursor-pointer ${
+                isFullscreen
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600'
+              }`}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline">Fullscreen</span>
+                </>
+              )}
+            </button>
+          )}
+
           {onReanalyze && (
             <button
               onClick={onReanalyze}
               title="Re-analyze this codebase (upload updated folder or zip)"
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 rounded-sm hover:bg-slate-50 transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 rounded-sm hover:bg-slate-50 transition-colors cursor-pointer"
             >
               <RotateCw className="w-3.5 h-3.5 text-blue-600" />
               <span className="hidden sm:inline">Re-analyze</span>
@@ -245,7 +275,7 @@ export function GraphToolbar({
           <button
             onClick={onExportSvg}
             title="Export Standalone Graph"
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-sm hover:bg-blue-700 transition-colors"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-sm hover:bg-blue-700 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export</span>

@@ -23,6 +23,8 @@ import {
   ExternalLink,
   RefreshCw,
   SlidersHorizontal,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { projectRepository } from '../../storage/projectRepository';
 import type { FunctionRecord, FunctionCallEdge, ProjectRecord } from '../../types/domain';
@@ -48,6 +50,48 @@ export function FunctionGraphPage() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleToggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement && !isFullscreen) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen().catch(() => {
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+      if ((e.key === 'f' || e.key === 'F') && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        handleToggleFullscreen();
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen, handleToggleFullscreen]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -213,40 +257,45 @@ export function FunctionGraphPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+    <div
+      ref={containerRef}
+      className={`flex flex-col h-full bg-slate-50 overflow-hidden ${
+        isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen bg-[#F8FAFC]' : 'relative'
+      }`}
+    >
       {/* Top Toolbar */}
-      <div className="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="p-2 sm:p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0 select-none">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             to={`/projects/${projectId}/graph`}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            File Graph
+            <span className="hidden sm:inline">File Graph</span>
           </Link>
-          <div className="h-4 w-px bg-slate-200" />
-          <div className="flex items-center gap-2">
+          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Code className="w-4 h-4 text-blue-600" />
-            <h1 className="text-sm font-bold text-slate-900">
-              Function Call Graph
+            <h1 className="text-xs sm:text-sm font-bold text-slate-900">
+              Function Graph
             </h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono font-medium">
-              {filteredFunctions.length} / {functions.length} functions
+            <span className="text-[11px] sm:text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono font-medium">
+              {filteredFunctions.length} / {functions.length}
             </span>
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        {/* Filter Controls & Fullscreen */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
           {/* Search Input */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search function or file..."
+              placeholder="Search functions..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-500 w-44"
+              className="pl-8 pr-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-500 w-32 sm:w-44"
             />
           </div>
 
@@ -254,7 +303,7 @@ export function FunctionGraphPage() {
           <select
             value={selectedType}
             onChange={e => setSelectedType(e.target.value)}
-            className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
+            className="hidden sm:block px-2.5 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Types</option>
             <option value="function">Function Declarations</option>
@@ -267,7 +316,7 @@ export function FunctionGraphPage() {
           <select
             value={selectedFile}
             onChange={e => setSelectedFile(e.target.value)}
-            className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500 max-w-[160px] truncate"
+            className="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500 max-w-[120px] sm:max-w-[160px] truncate"
           >
             <option value="all">All Files ({uniqueFiles.length})</option>
             {uniqueFiles.map(file => (
@@ -277,6 +326,20 @@ export function FunctionGraphPage() {
             ))}
           </select>
 
+          {/* Fullscreen Button */}
+          <button
+            onClick={handleToggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Fullscreen View"}
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+              isFullscreen
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5 text-blue-600" />}
+            <span className="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+          </button>
+
           {(searchQuery || selectedType !== 'all' || selectedFile !== 'all') && (
             <button
               onClick={() => {
@@ -284,7 +347,7 @@ export function FunctionGraphPage() {
                 setSelectedType('all');
                 setSelectedFile('all');
               }}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1"
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium px-1.5 py-1"
             >
               Reset
             </button>
@@ -295,6 +358,24 @@ export function FunctionGraphPage() {
       {/* Main Canvas & Inspector Split */}
       <div className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 h-full relative">
+          <button
+            onClick={handleToggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Fullscreen View"}
+            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white/95 hover:bg-white text-slate-800 hover:text-blue-600 rounded-sm border border-slate-200 shadow-md text-xs font-semibold backdrop-blur-xs transition-all cursor-pointer"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">Exit Fullscreen</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">Fullscreen</span>
+              </>
+            )}
+          </button>
+
           {filteredFunctions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
               <Code className="w-8 h-8 text-slate-300" />
@@ -328,7 +409,7 @@ export function FunctionGraphPage() {
                 position="bottom-right"
                 nodeStrokeColor="#94a3b8"
                 nodeColor="#e2e8f0"
-                className="border border-slate-200 rounded shadow-xs"
+                className="hidden! sm:block! border border-slate-200 rounded shadow-xs"
               />
             </ReactFlow>
           )}
@@ -336,19 +417,22 @@ export function FunctionGraphPage() {
 
         {/* Selected Function Inspector Sidebar */}
         {selectedFunction && (
-          <div className="w-80 bg-white border-l border-slate-200 flex flex-col h-full shadow-lg z-10">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="fixed inset-x-0 bottom-14 md:bottom-0 md:static z-40 md:z-auto w-full md:w-80 max-h-[60vh] md:max-h-full bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full shadow-2xl md:shadow-none rounded-t-xl md:rounded-none animate-in slide-in-from-bottom md:animate-none">
+            <div className="md:hidden flex justify-center pt-2 pb-0.5">
+              <div className="w-8 h-1 bg-slate-300 rounded-full" />
+            </div>
+            <div className="p-3 sm:p-4 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
                   Function Details
                 </span>
-                <h3 className="font-mono text-sm font-bold text-slate-900 truncate">
+                <h3 className="font-mono text-sm font-bold text-slate-900 truncate max-w-[220px]">
                   {selectedFunction.name}()
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedFunctionId(null)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1"
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1 rounded hover:bg-slate-100"
               >
                 ✕
               </button>

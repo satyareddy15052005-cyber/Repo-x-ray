@@ -101,8 +101,11 @@ export function FileExplorerPage() {
     return data.summary.circularGroups.some(g => g.fileIds.includes(selectedFile.id));
   }, [selectedFile, data]);
 
+  const [mobileTab, setMobileTab] = useState<'files' | 'code' | 'info'>('code');
+
   const handleSelectFile = (file: SourceFileRecord) => {
     setSelectedFile(file);
+    setMobileTab('code');
     navigate(`/projects/${projectId}/files/${encodeURIComponent(file.relativePath)}`, {
       replace: true,
     });
@@ -117,9 +120,44 @@ export function FileExplorerPage() {
   }
 
   return (
-    <div className="h-full flex overflow-hidden bg-white">
+    <div className="flex flex-col md:flex-row h-full overflow-hidden bg-white">
+      {/* Mobile Segmented Tab Switcher */}
+      <div className="md:hidden flex items-center bg-slate-100 p-1 border-b border-slate-200 shrink-0">
+        <button
+          onClick={() => setMobileTab('files')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === 'files' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Folder className="w-3.5 h-3.5" />
+          <span>Files</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('code')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === 'code' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <FileCode className="w-3.5 h-3.5" />
+          <span>Code</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('info')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-sm transition-all flex items-center justify-center gap-1.5 ${
+            mobileTab === 'info' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Zap className="w-3.5 h-3.5" />
+          <span>Details</span>
+        </button>
+      </div>
+
       {/* Left Column: File Tree */}
-      <div className="w-68 border-r border-slate-200 h-full shrink-0 flex flex-col">
+      <div
+        className={`w-full md:w-68 border-r border-slate-200 h-full shrink-0 flex flex-col ${
+          mobileTab === 'files' ? 'flex' : 'hidden md:flex'
+        }`}
+      >
         <FileTree
           files={data.files}
           selectedFileId={selectedFile?.id}
@@ -128,7 +166,11 @@ export function FileExplorerPage() {
       </div>
 
       {/* Center Column: Monaco Code Viewer */}
-      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+      <div
+        className={`flex-1 flex flex-col h-full min-w-0 overflow-hidden ${
+          mobileTab === 'code' ? 'flex' : 'hidden md:flex'
+        }`}
+      >
         {selectedFile ? (
           contentLoading ? (
             <div className="flex-1 flex items-center justify-center text-xs text-slate-400 font-mono">
@@ -149,7 +191,11 @@ export function FileExplorerPage() {
 
       {/* Right Column: File Inspector */}
       {selectedFile && (
-        <div className="w-80 border-l border-slate-200 h-full shrink-0 flex flex-col overflow-hidden bg-white text-xs">
+        <div
+          className={`w-full md:w-80 border-l border-slate-200 h-full shrink-0 flex flex-col overflow-hidden bg-white text-xs ${
+            mobileTab === 'info' ? 'flex' : 'hidden md:flex'
+          }`}
+        >
           {/* Header */}
           <div className="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
             <span className="font-semibold text-slate-900 truncate font-mono">

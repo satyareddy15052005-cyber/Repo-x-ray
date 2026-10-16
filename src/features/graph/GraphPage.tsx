@@ -74,6 +74,48 @@ export function GraphPage() {
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleToggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement && !isFullscreen) {
+      if (graphContainerRef.current?.requestFullscreen) {
+        graphContainerRef.current.requestFullscreen().catch(() => {
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+      if ((e.key === 'f' || e.key === 'F') && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        handleToggleFullscreen();
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen, handleToggleFullscreen]);
+
   // React Flow instance reference
   const reactFlowInstance = useRef<any>(null);
 
@@ -597,7 +639,12 @@ export function GraphPage() {
     : [];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white">
+    <div
+      ref={graphContainerRef}
+      className={`h-full flex flex-col overflow-hidden bg-white ${
+        isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen bg-[#F8FAFC]' : 'relative'
+      }`}
+    >
       {/* Top Graph Toolbar */}
       <GraphToolbar
         onFitView={handleFitView}
@@ -620,6 +667,8 @@ export function GraphPage() {
         onOpenShortestPath={() => setIsPathFinderOpen(true)}
         totalNodes={data.files.length}
         visibleNodes={filteredFiles.length}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={handleToggleFullscreen}
       />
 
       {/* 3-Column Body */}
@@ -673,6 +722,8 @@ export function GraphPage() {
             onPaneClick={handlePaneClick}
             onNodeDragStop={handleNodeDragStop}
             selectedNodeId={selectedFileId}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={handleToggleFullscreen}
             onInit={(instance) => {
               reactFlowInstance.current = instance;
               // Initial fit on load

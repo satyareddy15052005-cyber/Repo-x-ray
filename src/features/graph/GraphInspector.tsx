@@ -37,7 +37,7 @@ export function GraphInspector({
 
   if (!selectedFile && !selectedEdge) {
     return (
-      <div className="w-80 bg-white border-l border-slate-200 p-6 flex flex-col justify-center items-center text-center text-slate-400">
+      <div className="hidden md:flex w-80 bg-white border-l border-slate-200 p-6 flex-col justify-center items-center text-center text-slate-400">
         <FileCode className="w-8 h-8 text-slate-300 mb-2 stroke-1" />
         <div className="text-xs font-medium text-slate-500">No Node Selected</div>
         <div className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
@@ -52,7 +52,10 @@ export function GraphInspector({
     const tgt = allFilesMap.get(selectedEdge.targetFileId);
 
     return (
-      <div className="w-80 bg-white border-l border-slate-200 flex flex-col h-full overflow-hidden text-xs">
+      <div className="fixed inset-x-0 bottom-14 md:bottom-0 md:static z-40 md:z-auto w-full md:w-80 max-h-[60vh] md:max-h-full bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full overflow-hidden text-xs shadow-2xl md:shadow-none rounded-t-xl md:rounded-none animate-in slide-in-from-bottom md:animate-none duration-150">
+        <div className="md:hidden flex justify-center pt-2 pb-0.5">
+          <div className="w-8 h-1 bg-slate-300 rounded-full" />
+        </div>
         <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <span className="font-semibold text-slate-800">Dependency Edge</span>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded">
@@ -100,7 +103,10 @@ export function GraphInspector({
   const file = selectedFile!;
 
   return (
-    <div className="w-80 bg-white border-l border-slate-200 flex flex-col h-full overflow-hidden text-xs">
+    <div className="fixed inset-x-0 bottom-14 md:bottom-0 md:static z-40 md:z-auto w-full md:w-80 max-h-[60vh] md:max-h-full bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full overflow-hidden text-xs shadow-2xl md:shadow-none rounded-t-xl md:rounded-none animate-in slide-in-from-bottom md:animate-none duration-150">
+      <div className="md:hidden flex justify-center pt-2 pb-0.5">
+        <div className="w-8 h-1 bg-slate-300 rounded-full" />
+      </div>
       {/* Header */}
       <div className="p-3 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
